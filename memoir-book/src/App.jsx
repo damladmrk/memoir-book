@@ -612,7 +612,7 @@ function QuestionCard({ idx, question, isCurrent, isLocked, answer, draft, isLoc
       <div className="card-lines" />
       <div className="card-inner">
         <div className="card-meta">
-          <span className="card-week-num">{idx + 1}. Hafta</span>
+          <span className="card-week-num">{(idx)*(-1) + 25}. Hafta</span>
           {isLocked
             ? <span className="locked-tag"><span className={isLocking ? "lock-anim" : ""}>🔒</span> mühürlendi</span>
             : isCurrent
