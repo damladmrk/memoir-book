@@ -1,268 +1,252 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 const WEEKLY_QUESTIONS = [
-  "Çocukluğunda en çok hangi anını hatırlıyorsun? O gün nasıl hissettirdi sana?",
-  "Hayatında seni en çok şekillendiren kişi kim oldu ve neden?",
-  "Beni ilk gördüğünde ne hissettin? O günü anlatır mısın?",
-  "Şimdiye kadar verdiğin en cesur kararın hangisiydi?",
-  "Küçükken ne olmak istiyordun? O hayal gerçek oldu mu?",
-  "En mutlu olduğun yer neresi? O yerin kokusu, sesi nasıl?",
-  "Bana verdiğin en değerli ders hangisi sence?",
+  "Çocukluğundan kalan en eski anın ne?",
+  "Hayatında örnek aldığın biri var mı? Varsa kim ve neden?",
+  "Beni ilk gördüğünde ne hissettin?",
+  "...",
+  "Küçükken ne olmak istiyordun?",
+  "En mutlu olduğun yer neresi? Sana nasıl hissettiriyor?",
+  "Bir babanın çocuğuna vermesi gereken şeyler ne sence?",
   "Gençliğinde en büyük maceran neydi?",
-  "Hayatında en çok neye güldün? O anı anlatabilir misin?",
+  "...",
   "Benim için en çok endişelendiğin zaman hangisiydi?",
-  "Kendin hakkında en çok ne öğrendin?",
+  "...",
   "Geçmişe dönebilsen, kendine ne söylerdin?",
   "Hayatında en çok gurur duyduğun an hangisi?",
-  "Sevmenin ne demek olduğunu anladığın an hangisiydi?",
-  "Beni büyütürken en zor olan ne oldu?",
-  "Bir gün bütün zamanını dilediğin gibi geçirebilseydin ne yapardın?",
-  "Ailenden sana geçen en güzel şey ne?",
-  "Seninle geçirdiğimiz en özel anı hatırlıyor musun?",
+  "...",
+  "Benle ilgili bir şeyi değiştirebilseydin bu ne olurdu?",
+  "Senin için güzel bir gün nasıl olur?",
+  "Kendine baba olsaydın neleri farklı yapardın?",
+  "Benle ilgili özel bir an hatırlıyor musun, nasıldı ve neydi?",
   "Yaşlandıkça nelerin daha az, nelerin daha çok önem kazandığını fark ettin?",
   "Bana bırakmak istediğin en önemli şey ne?",
-  "Hayatında müzik ya da sanat sana ne ifade etti?",
-  "En sevdiğin mevsim ve o mevsimle birlikte gelen anılar neler?",
-  "Zor bir dönemden nasıl çıktın? O gücü nereden buldun?",
-  "Evimizde, aile hayatımızda hiç değişmemesini istediğin bir şey var mı?",
+  "...",
+  "En sevdiğin mevsim hangisi ve neden?",
+  "Zor bir dönemden nasıl çıkılır?",
+  "...",
   "Hayatının en güzel tatili ya da yolculuğu hangisi?",
   "Bana söylemediğin ama söylemek istediğin bir şey var mı?",
-  "Mutluluğun tarifi nedir senin için?",
-  "Seninle geçirmek isteyip de geçiremediğin bir anı var mı?",
+  "Nasıl mutlu olunur?",
+  "Benimle geçirmek isteyip de geçiremediğin bir anı var mı?",
   "Bu hayatta seni en çok şaşırtan şey ne oldu?",
   "Sana göre aşk ne demek?",
-  "Benim hakkımda bilmemi istediğin bir şey var mı?",
-  "Hayatın boyunca en çok neye minnettarsın?",
-  "Gelecekte benim için hayal ettiğin şeyler neler?",
-  "En zor vedanı hatırlıyor musun?",
-  "Bu dünyaya bıraktığın izin ne olmasını istersin?",
+  "Seninle ilgili bilmemi istediğin bir şey var mı?",
+  "Hayatın boyunca en çok neye şükrettin?",
+  "Gelecekte beni nasıl biri olarak görüyorsun?",
+  "...",
+  "...",
   "Sana göre iyi bir insan nasıl olunur?",
-  "Benimle paylaşmak istediğin bir sır ya da hikaye var mı?",
+  "Benle ilgili en çok ne öğrenmek isterdin?",
   "Bugün, şu an, nasıl hissediyorsun?",
-  "Bir sonraki nesle bırakmak istediğin en önemli değer ne?",
-  "Bu kitabı okuyanlar seni nasıl hatırlamasını istersin?",
-  "Seni sen yapan şey nedir?",
-  "Beni büyütürken en çok hangi özelliğime şaşırdın?",
-  "Bir günlüğüne istediğin herhangi bir çağda yaşayabilseydin, nereye giderdin?",
-  "Hayatında hiç terk etmek zorunda kaldığın bir şey ya da yer var mıydı?",
-  "Geçmişte başka türlü yapabilmeyi dilediğin bir anın var mı?",
+  "...",
+  "...",
+  "...",
+  "Benle ilgili şaşırdığın bir şey var mı?",
+  "Bir günlüğüne istediğin herhangi bir zamanda yaşayabilseydin, nereye giderdin?",
+  "...",
+  "...",
   "Seni en çok ne güldürür?",
   "Bana verdiğin en iyi hediye ne sence?",
-  "İnsanların seni nasıl gördüğünü düşünüyorsun? Bu doğru mu?",
-  "Hayatında en çok neye zaman harcadın?",
+  "İnsanların seni nasıl gördüğünü düşünüyorsun?",
+  "...",
   "Son olarak bana ne söylemek istersin?",
 ];
 
 function getWeekNumber() {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 1);
-  const diff = now - start;
-  const oneWeek = 1000 * 60 * 60 * 24 * 7;
-  return Math.floor(diff / oneWeek);
+  return Math.floor((now - start) / (1000 * 60 * 60 * 24 * 7));
 }
 
 function getCurrentQuestionIndex() {
   return getWeekNumber() % WEEKLY_QUESTIONS.length;
 }
 
-const FloatingSymbol = ({ symbol, style }) => (
-  <span className="floating-symbol" style={style}>{symbol}</span>
-);
+function formatDate(isoString) {
+  return new Date(isoString).toLocaleDateString("tr-TR", {
+    day: "numeric", month: "long", year: "numeric"
+  });
+}
 
 export default function App() {
-  const [screen, setScreen] = useState("intro"); // intro | book
+  const [screen, setScreen] = useState("intro");
   const [answers, setAnswers] = useState({});
   const [drafts, setDrafts] = useState({});
   const [loading, setLoading] = useState(true);
-  const [selectedWeek, setSelectedWeek] = useState(null);
   const [lockingIdx, setLockingIdx] = useState(null);
   const currentIdx = getCurrentQuestionIndex();
-  const textareaRef = useRef(null);
 
   useEffect(() => {
-    loadAnswers();
+    try {
+      const raw = localStorage.getItem("memoir_answers");
+      if (raw) setAnswers(JSON.parse(raw));
+    } catch (e) {}
+    setLoading(false);
   }, []);
 
-  async function loadAnswers() {
-  try {
-    const raw = localStorage.getItem("memoir_answers");
-    if (raw) setAnswers(JSON.parse(raw));
-  } catch (e) {}
-  setLoading(false);
-}
-
   async function saveAnswer(idx) {
-  const text = drafts[idx];
-  if (!text || !text.trim()) return;
-  setLockingIdx(idx);
-  await new Promise(r => setTimeout(r, 800));
-  const newAnswers = { ...answers, [idx]: { text: text.trim(), lockedAt: new Date().toISOString() } };
-  setAnswers(newAnswers);
-  localStorage.setItem("memoir_answers", JSON.stringify(newAnswers));
-  setLockingIdx(null);
-}
+    const text = drafts[idx];
+    if (!text || !text.trim()) return;
+    setLockingIdx(idx);
+    await new Promise(r => setTimeout(r, 900));
+    const newAnswers = {
+      ...answers,
+      [idx]: { text: text.trim(), lockedAt: new Date().toISOString() }
+    };
+    setAnswers(newAnswers);
+    localStorage.setItem("memoir_answers", JSON.stringify(newAnswers));
+    setLockingIdx(null);
+  }
 
-  const visibleWeeks = Array.from({ length: currentIdx + 1 }, (_, i) => i);
-
-  const symbols = ["✦", "◇", "♡", "✿", "◈", "❋", "✧", "◎"];
+  const answeredCount = Object.keys(answers).length;
+  // Only show weeks up to and including current
+  const visibleWeeks = Array.from({ length: currentIdx + 1 }, (_, i) => i).reverse();
 
   if (loading) return (
-    <div style={{ background: "#1C1F2E", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ color: "#F5C842", fontFamily: "Playfair Display, serif", fontSize: 24, opacity: 0.7 }}>yükleniyor…</div>
+    <div style={{ background: "#F7F3EC", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <p style={{ fontFamily: "'Lora', serif", color: "#8B7355", fontSize: 18 }}>yükleniyor…</p>
     </div>
   );
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { background: #EDE8DF; }
 
-        body { background: #1C1F2E; }
-
-        .floating-symbol {
-          position: absolute;
-          color: #F5C842;
-          opacity: 0.15;
-          font-size: 18px;
-          animation: floatUp 8s ease-in-out infinite;
-          pointer-events: none;
-          user-select: none;
-        }
-
-        @keyframes floatUp {
-          0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.12; }
-          50% { transform: translateY(-18px) rotate(10deg); opacity: 0.22; }
-        }
-
-        @keyframes fadeInDown {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes bookPulse {
-          0%, 100% { transform: scale(1) rotate(-2deg); filter: drop-shadow(0 0 18px #F5C84255); }
-          50% { transform: scale(1.04) rotate(2deg); filter: drop-shadow(0 0 36px #F5C84299); }
-        }
-
-        @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-
-        @keyframes lockBounce {
-          0% { transform: scale(1); }
-          40% { transform: scale(1.3) rotate(-5deg); }
-          70% { transform: scale(0.9) rotate(3deg); }
-          100% { transform: scale(1) rotate(0deg); }
-        }
-
-        @keyframes cardReveal {
-          from { opacity: 0; transform: translateY(16px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .intro-screen {
+        /* ── INTRO ── */
+        .intro {
           min-height: 100vh;
-          background: #1C1F2E;
+          background: #F7F3EC;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
+          padding: 48px 28px;
           position: relative;
           overflow: hidden;
-          padding: 40px 20px;
         }
 
-        .book-emoji {
-          font-size: 88px;
-          animation: bookPulse 4s ease-in-out infinite;
+        .intro::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-image:
+            repeating-linear-gradient(
+              transparent,
+              transparent 31px,
+              #D6CDBF 31px,
+              #D6CDBF 32px
+            );
+          opacity: 0.45;
+          pointer-events: none;
+        }
+
+        .intro-inner {
+          position: relative;
+          z-index: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          max-width: 480px;
+          width: 100%;
+        }
+
+        .intro-ornament {
+          font-family: 'Playfair Display', serif;
+          font-size: 13px;
+          color: #8B3A2A;
+          letter-spacing: 4px;
+          text-transform: uppercase;
+          margin-bottom: 28px;
+          opacity: 0.8;
+        }
+
+        .intro-book {
+          font-size: 64px;
+          margin-bottom: 24px;
           display: block;
-          margin-bottom: 32px;
-          cursor: default;
+          filter: sepia(0.3);
         }
 
         .intro-title {
           font-family: 'Playfair Display', serif;
-          font-size: clamp(32px, 7vw, 58px);
+          font-size: clamp(34px, 8vw, 54px);
           font-weight: 700;
-          color: #F0EDE4;
+          color: #2C2416;
           text-align: center;
-          line-height: 1.15;
-          margin-bottom: 14px;
-          animation: fadeInDown 1s ease both;
+          line-height: 1.2;
+          margin-bottom: 8px;
         }
 
-        .intro-title span {
-          background: linear-gradient(90deg, #F5C842, #E8A598, #F5C842);
-          background-size: 200% auto;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          animation: shimmer 3.5s linear infinite;
+        .intro-title em {
+          font-style: italic;
+          color: #8B3A2A;
+        }
+
+        .intro-rule {
+          width: 60px;
+          height: 1px;
+          background: #8B3A2A;
+          margin: 24px auto;
+          opacity: 0.5;
         }
 
         .intro-subtitle {
-          font-family: 'Inter', sans-serif;
-          font-weight: 300;
+          font-family: 'Lora', serif;
+          font-style: italic;
           font-size: 16px;
-          color: #A8A5C0;
+          color: #6B5B45;
           text-align: center;
-          max-width: 360px;
-          line-height: 1.7;
-          margin-bottom: 48px;
-          animation: fadeInDown 1.2s ease both;
+          line-height: 1.8;
+          margin-bottom: 44px;
+          max-width: 340px;
         }
 
         .intro-btn {
           font-family: 'Playfair Display', serif;
-          font-size: 17px;
-          color: #1C1F2E;
-          background: #F5C842;
+          font-size: 16px;
+          font-weight: 600;
+          color: #F7F3EC;
+          background: #2C2416;
           border: none;
-          border-radius: 50px;
-          padding: 16px 44px;
+          border-radius: 2px;
+          padding: 15px 48px;
           cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s;
-          box-shadow: 0 4px 24px #F5C84244;
-          animation: fadeInDown 1.4s ease both;
-          letter-spacing: 0.3px;
+          letter-spacing: 1px;
+          transition: background 0.2s, transform 0.15s;
         }
 
         .intro-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 36px #F5C84266;
+          background: #8B3A2A;
+          transform: translateY(-1px);
         }
 
-        .decorative-row {
-          display: flex;
-          gap: 18px;
-          margin-bottom: 40px;
-          animation: fadeInDown 1.1s ease both;
+        .intro-week-hint {
+          margin-top: 28px;
+          font-family: 'Lora', serif;
+          font-size: 13px;
+          color: #A0917A;
+          font-style: italic;
         }
 
-        .decorative-row span {
-          font-size: 22px;
-          color: #E8A598;
-          opacity: 0.7;
-        }
-
-        /* BOOK SCREEN */
-
-        .book-screen {
+        /* ── BOOK SCREEN ── */
+        .book {
           min-height: 100vh;
-          background: #1C1F2E;
-          padding: 0 0 80px;
+          background: #EDE8DF;
+          padding-bottom: 80px;
         }
 
         .book-header {
-          background: linear-gradient(180deg, #13162A 0%, #1C1F2E 100%);
-          border-bottom: 1px solid #2D3154;
-          padding: 24px 24px 20px;
+          background: #2C2416;
+          padding: 20px 24px 18px;
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 16px;
           position: sticky;
           top: 0;
           z-index: 10;
@@ -270,378 +254,311 @@ export default function App() {
 
         .back-btn {
           background: none;
-          border: 1px solid #2D3154;
-          color: #A8A5C0;
-          font-size: 18px;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
+          border: 1px solid #5C4A32;
+          color: #C4A882;
+          font-size: 16px;
+          width: 34px;
+          height: 34px;
+          border-radius: 2px;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
           transition: border-color 0.2s, color 0.2s;
+          flex-shrink: 0;
         }
+        .back-btn:hover { border-color: #C4A882; color: #F7F3EC; }
 
-        .back-btn:hover { border-color: #F5C842; color: #F5C842; }
-
-        .book-header-text {
-          flex: 1;
-        }
+        .book-header-text { flex: 1; }
 
         .book-header-title {
           font-family: 'Playfair Display', serif;
-          font-size: 18px;
-          color: #F0EDE4;
+          font-size: 17px;
           font-weight: 600;
+          color: #F7F3EC;
+          letter-spacing: 0.3px;
         }
 
         .book-header-sub {
-          font-family: 'Inter', sans-serif;
+          font-family: 'Lora', serif;
           font-size: 12px;
-          color: #A8A5C0;
-          margin-top: 2px;
+          color: #8B7355;
+          margin-top: 3px;
+          font-style: italic;
         }
 
-        .progress-bar-wrap {
-          padding: 16px 24px 0;
+        .book-progress {
+          padding: 20px 24px 0;
         }
 
-        .progress-label {
-          font-family: 'Inter', sans-serif;
+        .progress-meta {
+          font-family: 'Lora', serif;
           font-size: 12px;
-          color: #A8A5C0;
-          margin-bottom: 8px;
+          color: #8B7355;
+          font-style: italic;
           display: flex;
           justify-content: space-between;
+          margin-bottom: 8px;
         }
 
-        .progress-bar {
-          height: 4px;
-          background: #2D3154;
-          border-radius: 4px;
-          overflow: hidden;
+        .progress-track {
+          height: 2px;
+          background: #D6CDBF;
         }
 
         .progress-fill {
           height: 100%;
-          background: linear-gradient(90deg, #F5C842, #E8A598);
-          border-radius: 4px;
-          transition: width 0.6s ease;
+          background: #8B3A2A;
+          transition: width 0.7s ease;
         }
 
-        .questions-list {
-          padding: 24px 20px 0;
+        .section-divider {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 28px 24px 12px;
+        }
+
+        .section-divider-line {
+          flex: 1;
+          height: 1px;
+          background: #C4B89A;
+        }
+
+        .section-divider-text {
+          font-family: 'Lora', serif;
+          font-size: 11px;
+          font-style: italic;
+          color: #A0917A;
+          white-space: nowrap;
+        }
+
+        .cards {
+          padding: 0 16px;
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 20px;
         }
 
-        .question-card {
-          background: #252840;
-          border: 1px solid #2D3154;
-          border-radius: 18px;
-          padding: 24px;
-          animation: cardReveal 0.5s ease both;
+        /* ── CARD ── */
+        .card {
+          background: #F7F3EC;
+          border-radius: 1px;
+          box-shadow: 2px 3px 12px rgba(44,36,22,0.12), 0 1px 3px rgba(44,36,22,0.08);
           position: relative;
           overflow: hidden;
         }
 
-        .question-card.current {
-          border-color: #F5C84255;
-          background: linear-gradient(135deg, #252840 0%, #2A2A50 100%);
-          box-shadow: 0 0 0 1px #F5C84222, 0 8px 32px #00000044;
+        .card::before {
+          content: '';
+          position: absolute;
+          top: 0; bottom: 0;
+          left: 0;
+          width: 3px;
+          background: #8B3A2A;
+          opacity: 0.7;
         }
 
-        .question-card.locked {
-          border-color: #2D3154;
-          opacity: 0.85;
+        .card.past::before {
+          background: #C4B89A;
+          opacity: 0.5;
         }
 
-        .card-week-badge {
-          font-family: 'Inter', sans-serif;
+        .card-lines {
+          position: absolute;
+          inset: 0;
+          background-image: repeating-linear-gradient(
+            transparent,
+            transparent 31px,
+            #E0D8CC 31px,
+            #E0D8CC 32px
+          );
+          pointer-events: none;
+          opacity: 0.6;
+        }
+
+        .card-inner {
+          position: relative;
+          z-index: 1;
+          padding: 24px 24px 24px 28px;
+        }
+
+        .card-meta {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 16px;
+        }
+
+        .card-week-num {
+          font-family: 'Playfair Display', serif;
           font-size: 11px;
-          font-weight: 500;
-          color: #F5C842;
+          color: #8B3A2A;
+          letter-spacing: 2px;
           text-transform: uppercase;
-          letter-spacing: 1.5px;
-          margin-bottom: 12px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
         }
 
-        .current-badge {
-          background: #F5C84222;
-          color: #F5C842;
-          padding: 2px 8px;
-          border-radius: 20px;
-          font-size: 10px;
+        .card.past .card-week-num {
+          color: #A0917A;
         }
 
-        .locked-badge {
-          background: #2D3154;
-          color: #6B6F96;
-          padding: 2px 8px;
-          border-radius: 20px;
-          font-size: 10px;
+        .locked-tag {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 5px;
+          font-family: 'Lora', serif;
+          font-size: 11px;
+          font-style: italic;
+          color: #A0917A;
+        }
+
+        .current-tag {
+          font-family: 'Lora', serif;
+          font-size: 11px;
+          font-style: italic;
+          color: #8B3A2A;
         }
 
         .card-question {
           font-family: 'Playfair Display', serif;
           font-size: 18px;
           font-weight: 400;
-          color: #F0EDE4;
-          line-height: 1.55;
-          margin-bottom: 20px;
           font-style: italic;
+          color: #2C2416;
+          line-height: 1.6;
+          margin-bottom: 20px;
         }
 
-        .card-question::before {
-          content: '"';
-          color: #F5C842;
-          font-size: 28px;
-          line-height: 0;
-          vertical-align: -8px;
-          margin-right: 2px;
-        }
-
-        .card-answer-locked {
-          font-family: 'Inter', sans-serif;
-          font-size: 14px;
-          font-weight: 300;
-          color: #C8C5DC;
-          line-height: 1.8;
-          background: #1C1F2E;
-          border-radius: 12px;
-          padding: 16px;
-          border-left: 3px solid #F5C84255;
+        .card-answer-text {
+          font-family: 'Lora', serif;
+          font-size: 15px;
+          font-weight: 400;
+          color: #4A3C2A;
+          line-height: 1.85;
           white-space: pre-wrap;
+          padding-top: 4px;
+          border-top: 1px solid #D6CDBF;
         }
 
-        .card-locked-date {
-          font-family: 'Inter', sans-serif;
+        .card-answer-date {
+          font-family: 'Lora', serif;
           font-size: 11px;
-          color: #6B6F96;
-          margin-top: 10px;
+          font-style: italic;
+          color: #B0A088;
+          margin-top: 12px;
           text-align: right;
         }
 
         .card-textarea {
           width: 100%;
-          min-height: 140px;
-          background: #1C1F2E;
-          border: 1px solid #3D4168;
-          border-radius: 12px;
-          padding: 14px 16px;
-          font-family: 'Inter', sans-serif;
+          min-height: 160px;
+          background: transparent;
+          border: none;
+          border-top: 1px solid #D6CDBF;
+          padding: 16px 0 4px;
+          font-family: 'Lora', serif;
           font-size: 15px;
-          font-weight: 300;
-          color: #F0EDE4;
-          line-height: 1.7;
+          color: #2C2416;
+          line-height: 1.85;
           resize: vertical;
           outline: none;
-          transition: border-color 0.2s;
-        }
-
-        .card-textarea:focus {
-          border-color: #F5C84288;
         }
 
         .card-textarea::placeholder {
-          color: #4A4E72;
+          color: #C4B89A;
+          font-style: italic;
         }
 
         .send-btn {
-          margin-top: 14px;
+          margin-top: 16px;
           width: 100%;
-          padding: 14px;
-          background: linear-gradient(135deg, #F5C842, #E8B830);
+          padding: 13px;
+          background: #2C2416;
           border: none;
-          border-radius: 12px;
+          border-radius: 1px;
           font-family: 'Playfair Display', serif;
-          font-size: 16px;
-          color: #1C1F2E;
+          font-size: 15px;
+          font-weight: 600;
+          color: #F7F3EC;
           cursor: pointer;
-          transition: opacity 0.2s, transform 0.2s;
+          letter-spacing: 0.5px;
+          transition: background 0.2s;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
         }
 
-        .send-btn:hover:not(:disabled) {
-          opacity: 0.92;
-          transform: translateY(-1px);
-        }
+        .send-btn:hover:not(:disabled) { background: #8B3A2A; }
+        .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-        .send-btn:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
+        @keyframes lockBounce {
+          0% { transform: scale(1); }
+          40% { transform: scale(1.4) rotate(-8deg); }
+          70% { transform: scale(0.9) rotate(4deg); }
+          100% { transform: scale(1) rotate(0); }
         }
+        .lock-anim { display: inline-block; animation: lockBounce 0.7s ease; }
 
-        .locking-btn {
-          background: linear-gradient(135deg, #E8A598, #D4917F);
-          animation: none;
-        }
-
-        .lock-anim {
-          display: inline-block;
-          animation: lockBounce 0.8s ease;
-        }
-
-        .empty-future {
-          font-family: 'Inter', sans-serif;
+        .future-note {
+          font-family: 'Lora', serif;
           font-size: 13px;
-          color: #4A4E72;
+          font-style: italic;
+          color: #B0A088;
           text-align: center;
           padding: 32px 0 8px;
-          font-style: italic;
-        }
-
-        .corner-ornament {
-          position: absolute;
-          top: 12px;
-          right: 14px;
-          font-size: 20px;
-          opacity: 0.08;
-          pointer-events: none;
-        }
-
-        .stats-row {
-          display: flex;
-          gap: 12px;
-          padding: 16px 20px 0;
-        }
-
-        .stat-box {
-          flex: 1;
-          background: #252840;
-          border: 1px solid #2D3154;
-          border-radius: 14px;
-          padding: 14px;
-          text-align: center;
-        }
-
-        .stat-num {
-          font-family: 'Playfair Display', serif;
-          font-size: 28px;
-          color: #F5C842;
-          line-height: 1;
-        }
-
-        .stat-label {
-          font-family: 'Inter', sans-serif;
-          font-size: 11px;
-          color: #6B6F96;
-          margin-top: 4px;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-        }
-
-        .section-label {
-          font-family: 'Inter', sans-serif;
-          font-size: 11px;
-          color: #6B6F96;
-          text-transform: uppercase;
-          letter-spacing: 1.5px;
-          padding: 24px 24px 8px;
         }
       `}</style>
 
       {screen === "intro" ? (
-        <div className="intro-screen">
-          {/* Floating symbols */}
-          {symbols.map((s, i) => (
-            <FloatingSymbol
-              key={i}
-              symbol={s}
-              style={{
-                left: `${8 + (i * 12.5)}%`,
-                top: `${15 + (i % 3) * 22}%`,
-                animationDelay: `${i * 0.9}s`,
-                fontSize: `${14 + (i % 3) * 6}px`,
-              }}
-            />
-          ))}
-          {[...symbols].reverse().map((s, i) => (
-            <FloatingSymbol
-              key={`b${i}`}
-              symbol={s}
-              style={{
-                right: `${6 + (i * 10)}%`,
-                bottom: `${10 + (i % 4) * 15}%`,
-                animationDelay: `${i * 0.7 + 0.4}s`,
-                fontSize: `${12 + (i % 3) * 5}px`,
-              }}
-            />
-          ))}
-
-          <span className="book-emoji">📖</span>
-
-          <div className="decorative-row">
-            {["✦", "◇", "♡", "◇", "✦"].map((s, i) => (
-              <span key={i}>{s}</span>
-            ))}
+        <div className="intro">
+          <div className="intro-inner">
+            <p className="intro-ornament">— Anılar Kitabı —</p>
+            <span className="intro-book">📖</span>
+            <h1 className="intro-title">
+              Bir <em>Ömür</em><br />Dolusu Söz
+            </h1>
+            <div className="intro-rule" />
+            <p className="intro-subtitle">
+              Her hafta bir soru, her cevap bir sayfa.<br />
+              Yılın sonunda seninle kalacak bir kitap.
+            </p>
+            <button className="intro-btn" onClick={() => setScreen("book")}>
+              Sayfaları Aç
+            </button>
+            <p className="intro-week-hint">
+              {currentIdx + 1}. hafta sorusu seni bekliyor
+            </p>
           </div>
-
-          <h1 className="intro-title">
-            Bir <span>Ömür</span><br />Dolusu Söz
-          </h1>
-
-          <p className="intro-subtitle">
-            Her hafta bir soru, her cevap bir anı.<br />
-            Yılın sonunda seninle kalacak bir kitap.
-          </p>
-
-          <button className="intro-btn" onClick={() => setScreen("book")}>
-            Sayfaları Aç ✦
-          </button>
         </div>
       ) : (
-        <div className="book-screen">
+        <div className="book">
           <div className="book-header">
             <button className="back-btn" onClick={() => setScreen("intro")}>←</button>
             <div className="book-header-text">
-              <div className="book-header-title">Anılar Kitabı 📖</div>
-              <div className="book-header-sub">Her Pazar yeni bir soru seni bekliyor</div>
+              <div className="book-header-title">Anılar Kitabı</div>
+              <div className="book-header-sub">Her Pazar yeni bir sayfa</div>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="stats-row">
-            <div className="stat-box">
-              <div className="stat-num">{Object.keys(answers).length}</div>
-              <div className="stat-label">Yazılan</div>
+          <div className="book-progress">
+            <div className="progress-meta">
+              <span>{answeredCount} sayfa yazıldı</span>
+              <span>{WEEKLY_QUESTIONS.length - answeredCount} sayfa kaldı</span>
             </div>
-            <div className="stat-box">
-              <div className="stat-num">{currentIdx + 1}</div>
-              <div className="stat-label">Toplam Soru</div>
-            </div>
-            <div className="stat-box">
-              <div className="stat-num">{WEEKLY_QUESTIONS.length - currentIdx - 1}</div>
-              <div className="stat-label">Kalan</div>
+            <div className="progress-track">
+              <div className="progress-fill" style={{ width: `${(answeredCount / WEEKLY_QUESTIONS.length) * 100}%` }} />
             </div>
           </div>
 
-          {/* Progress */}
-          <div className="progress-bar-wrap">
-            <div className="progress-label">
-              <span>İlerleme</span>
-              <span>{Math.round((Object.keys(answers).length / WEEKLY_QUESTIONS.length) * 100)}%</span>
-            </div>
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${(Object.keys(answers).length / WEEKLY_QUESTIONS.length) * 100}%` }} />
-            </div>
+          {/* Current week */}
+          <div className="section-divider">
+            <div className="section-divider-line" />
+            <span className="section-divider-text">bu hafta</span>
+            <div className="section-divider-line" />
           </div>
 
-          <div className="section-label">Bu Hafta</div>
-
-          {/* Current week card */}
-          <div className="questions-list">
+          <div className="cards">
             <QuestionCard
               idx={currentIdx}
               question={WEEKLY_QUESTIONS[currentIdx]}
@@ -655,11 +572,16 @@ export default function App() {
             />
           </div>
 
+          {/* Past weeks */}
           {currentIdx > 0 && (
             <>
-              <div className="section-label" style={{ paddingTop: 32 }}>Geçmiş Haftalar</div>
-              <div className="questions-list">
-                {visibleWeeks.slice(0, currentIdx).reverse().map((idx) => (
+              <div className="section-divider">
+                <div className="section-divider-line" />
+                <span className="section-divider-text">geçmiş sayfalar</span>
+                <div className="section-divider-line" />
+              </div>
+              <div className="cards">
+                {visibleWeeks.slice(1).map((idx) => (
                   <QuestionCard
                     key={idx}
                     idx={idx}
@@ -677,9 +599,7 @@ export default function App() {
             </>
           )}
 
-          <p className="empty-future">
-            ✦ &nbsp;Yeni sorular her Pazar gelir &nbsp;✦
-          </p>
+          <p className="future-note">— Yeni sorular her Pazar gelir —</p>
         </div>
       )}
     </>
@@ -687,51 +607,48 @@ export default function App() {
 }
 
 function QuestionCard({ idx, question, isCurrent, isLocked, answer, draft, isLocking, onDraftChange, onSave }) {
-  const lockedDate = answer?.lockedAt
-    ? new Date(answer.lockedAt).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })
-    : null;
-
   return (
-    <div className={`question-card ${isCurrent ? "current" : ""} ${isLocked ? "locked" : ""}`}>
-      <span className="corner-ornament">◈</span>
-      <div className="card-week-badge">
-        Hafta {idx + 1}
-        {isCurrent && !isLocked && <span className="current-badge">Bu Hafta ✦</span>}
-        {isLocked && (
-          <span className="locked-badge">
-            <span className={isLocking ? "lock-anim" : ""}>🔒</span> Kilitli
-          </span>
+    <div className={`card ${isCurrent ? "current" : "past"}`}>
+      <div className="card-lines" />
+      <div className="card-inner">
+        <div className="card-meta">
+          <span className="card-week-num">{idx + 1}. Hafta</span>
+          {isLocked
+            ? <span className="locked-tag"><span className={isLocking ? "lock-anim" : ""}>🔒</span> mühürlendi</span>
+            : isCurrent
+              ? <span className="current-tag">bugün</span>
+              : null
+          }
+        </div>
+
+        <p className="card-question">{question}</p>
+
+        {isLocked ? (
+          <>
+            <p className="card-answer-text">{answer.text}</p>
+            <p className="card-answer-date">{formatDate(answer.lockedAt)}</p>
+          </>
+        ) : (
+          <>
+            <textarea
+              className="card-textarea"
+              placeholder="Aklından geçenleri buraya yaz…"
+              value={draft}
+              onChange={(e) => onDraftChange(e.target.value)}
+            />
+            <button
+              className="send-btn"
+              onClick={onSave}
+              disabled={!draft.trim() || isLocking}
+            >
+              {isLocking
+                ? <><span className="lock-anim">🔒</span> Mühürleniyor…</>
+                : "Yaz & Mühürle"
+              }
+            </button>
+          </>
         )}
       </div>
-
-      <p className="card-question">{question}</p>
-
-      {isLocked ? (
-        <>
-          <div className="card-answer-locked">{answer.text}</div>
-          {lockedDate && <div className="card-locked-date">{lockedDate}</div>}
-        </>
-      ) : (
-        <>
-          <textarea
-            className="card-textarea"
-            placeholder="Aklından geçenleri buraya yaz… 🖊"
-            value={draft}
-            onChange={(e) => onDraftChange(e.target.value)}
-          />
-          <button
-            className={`send-btn ${isLocking ? "locking-btn" : ""}`}
-            onClick={onSave}
-            disabled={!draft.trim() || isLocking}
-          >
-            {isLocking ? (
-              <><span className="lock-anim">🔒</span> Kilitleniyor…</>
-            ) : (
-              <>Gönder & Kilitle ✦</>
-            )}
-          </button>
-        </>
-      )}
     </div>
   );
 }
