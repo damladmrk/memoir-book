@@ -513,21 +513,21 @@ export default function App() {
       {screen === "intro" ? (
         <div className="intro">
           <div className="intro-inner">
-            <p className="intro-ornament">— Anılar Kitabı —</p>
+            <p className="intro-ornament">— Hatıra —</p>
             <span className="intro-book">📖</span>
             <h1 className="intro-title">
               Bir <em>Ömür</em><br />Dolusu Söz
             </h1>
             <div className="intro-rule" />
             <p className="intro-subtitle">
-              Her hafta bir soru, her cevap bir sayfa.<br />
-              Yılın sonunda seninle kalacak bir kitap.
+              Her hafta bir soru ve bir cevap olacak.<br />
+              Çocuğuna neler bırakırdın gibi bir şeyler.
             </p>
             <button className="intro-btn" onClick={() => setScreen("book")}>
-              Sayfaları Aç
+              Sorular için...
             </button>
             <p className="intro-week-hint">
-              {currentIdx + 1}. hafta sorusu seni bekliyor
+              {(currentIdx)*(-1) + 25}. hafta sorusu seni bekliyor
             </p>
           </div>
         </div>
