@@ -47,7 +47,7 @@ function getWeekNumber() {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 1);
   const weekOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24 * 7));
-  return Math.max(0, weekOfYear - 24); // 25. haftadan başla (0-indexed)
+  return Math.max(0, weekOfYear - 23); // 25. haftadan başla (0-indexed)
 }
 
 function getCurrentQuestionIndex() {
