@@ -506,11 +506,15 @@ export default function App() {
         <div className="intro">
           <div className="intro-inner">
             <p className="intro-ornament">— Hatıra —</p>
-            <span className="intro-book">📖</span>
-            <h1 className="intro-title">
-              Bir <em>Ömür</em><br />Dolusu Söz
-            </h1>
-            <div className="intro-rule" />
+            <img src="/memoir-book/photo.jpg" alt="" style={{
+              width: 200,
+              height: 200,
+              objectFit: "cover",
+              borderRadius: "50%",
+              marginBottom: 24,
+              filter: "sepia(0.2)",
+              boxShadow: "0 4px 20px rgba(44,36,22,0.2)"
+            }} />
             <p className="intro-subtitle">
               Her hafta bir soru ve bir cevap olacak.<br />
               Çocuğuna neler bırakırdın gibi bir şeyler.
