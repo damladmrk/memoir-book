@@ -46,7 +46,8 @@ const WEEKLY_QUESTIONS = [
 function getWeekNumber() {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 1);
-  return Math.floor((now - start) / (1000 * 60 * 60 * 24 * 7));
+  const weekOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24 * 7));
+  return Math.max(0, weekOfYear - 24); // 25. haftadan başla (0-indexed)
 }
 
 function getCurrentQuestionIndex() {
@@ -530,7 +531,7 @@ export default function App() {
               Sorular için...
             </button>
             <p className="intro-week-hint">
-              {(currentIdx)*(-1) + 25}. hafta sorusu seni bekliyor
+              {(currentIdx)}. hafta sorusu seni bekliyor
             </p>
           </div>
         </div>
@@ -615,7 +616,7 @@ function QuestionCard({ idx, question, isCurrent, isLocked, answer, draft, isLoc
       <div className="card-lines" />
       <div className="card-inner">
         <div className="card-meta">
-          <span className="card-week-num">{(idx)*(-1) + 25}. Hafta</span>
+          <span className="card-week-num">{(idx)}. Hafta</span>
           {isLocked
             ? <span className="locked-tag"><span className={isLocking ? "lock-anim" : ""}>🔒</span> kilitlendi</span>
             : isCurrent
