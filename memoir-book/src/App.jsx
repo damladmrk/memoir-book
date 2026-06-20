@@ -4,24 +4,19 @@ const WEEKLY_QUESTIONS = [
   "Çocukluğundan kalan en eski anın ne?",
   "Hayatında örnek aldığın biri var mı? Varsa kim ve neden?",
   "Beni ilk gördüğünde ne hissettin?",
-  "...",
   "Küçükken ne olmak istiyordun?",
   "En mutlu olduğun yer neresi? Sana nasıl hissettiriyor?",
   "Bir babanın çocuğuna vermesi gereken şeyler ne sence?",
   "Gençliğinde en büyük maceran neydi?",
-  "...",
   "Benim için en çok endişelendiğin zaman hangisiydi?",
-  "...",
   "Geçmişe dönebilsen, kendine ne söylerdin?",
   "Hayatında en çok gurur duyduğun an hangisi?",
-  "...",
   "Benle ilgili bir şeyi değiştirebilseydin bu ne olurdu?",
   "Senin için güzel bir gün nasıl olur?",
   "Kendine baba olsaydın neleri farklı yapardın?",
   "Benle ilgili özel bir an hatırlıyor musun, nasıldı ve neydi?",
   "Yaşlandıkça nelerin daha az, nelerin daha çok önem kazandığını fark ettin?",
   "Bana bırakmak istediğin en önemli şey ne?",
-  "...",
   "En sevdiğin mevsim hangisi ve neden?",
   "Zor bir dönemden nasıl çıkılır?",
   "Benle ilgili en çok gurur duyduğun şey ne?",
@@ -34,18 +29,13 @@ const WEEKLY_QUESTIONS = [
   "Seninle ilgili bilmemi istediğin bir şey var mı?",
   "Hayatın boyunca en çok neye şükrettin?",
   "Gelecekte beni nasıl biri olarak görüyorsun?",
-  "...",
   "Bir çocuğun olacağını öğrendiğinde ilk ne hissettin?",
   "Sana göre iyi bir insan nasıl olunur?",
   "Benle ilgili en çok ne öğrenmek isterdin?",
   "Bugün, şu an, nasıl hissediyorsun?",
   "Benim geleceğimle ilgili seni en çok ne endişelendiriyor ya da korkutuyor?",
-  "...",
-  "...",
   "Benle ilgili şaşırdığın bir şey var mı?",
   "Bir günlüğüne istediğin herhangi bir zamanda yaşayabilseydin, nereye giderdin?",
-  "...",
-  "...",
   "Seni en çok ne güldürür?",
   "Bana verdiğin en iyi hediye ne sence?",
   "İnsanların seni nasıl gördüğünü düşünüyorsun?",
@@ -86,18 +76,31 @@ export default function App() {
   }, []);
 
   async function saveAnswer(idx) {
-    const text = drafts[idx];
-    if (!text || !text.trim()) return;
-    setLockingIdx(idx);
-    await new Promise(r => setTimeout(r, 900));
-    const newAnswers = {
-      ...answers,
-      [idx]: { text: text.trim(), lockedAt: new Date().toISOString() }
-    };
-    setAnswers(newAnswers);
-    localStorage.setItem("memoir_answers", JSON.stringify(newAnswers));
-    setLockingIdx(null);
-  }
+  const text = drafts[idx];
+  if (!text || !text.trim()) return;
+  setLockingIdx(idx);
+  await new Promise(r => setTimeout(r, 900));
+
+  window.emailjs.send(
+    "service_2i0zled",
+    "template_d49mgy8",
+    {
+      week_num: idx + 1,
+      question: WEEKLY_QUESTIONS[idx],
+      answer: text.trim(),
+      date: new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })
+    },
+    "dxBY-FMG_OyKBuUdn"
+  );
+
+  const newAnswers = {
+    ...answers,
+    [idx]: { text: text.trim(), lockedAt: new Date().toISOString() }
+  };
+  setAnswers(newAnswers);
+  localStorage.setItem("memoir_answers", JSON.stringify(newAnswers));
+  setLockingIdx(null);
+}
 
   const answeredCount = Object.keys(answers).length;
   // Only show weeks up to and including current
@@ -537,7 +540,7 @@ export default function App() {
             <button className="back-btn" onClick={() => setScreen("intro")}>←</button>
             <div className="book-header-text">
               <div className="book-header-title">Anılar Kitabı</div>
-              <div className="book-header-sub">Her Pazar yeni bir sayfa</div>
+              <div className="book-header-sub">Her hafta yeni bi soru</div>
             </div>
           </div>
 
@@ -614,7 +617,7 @@ function QuestionCard({ idx, question, isCurrent, isLocked, answer, draft, isLoc
         <div className="card-meta">
           <span className="card-week-num">{(idx)*(-1) + 25}. Hafta</span>
           {isLocked
-            ? <span className="locked-tag"><span className={isLocking ? "lock-anim" : ""}>🔒</span> mühürlendi</span>
+            ? <span className="locked-tag"><span className={isLocking ? "lock-anim" : ""}>🔒</span> kilitlendi</span>
             : isCurrent
               ? <span className="current-tag">bugün</span>
               : null
@@ -642,8 +645,8 @@ function QuestionCard({ idx, question, isCurrent, isLocked, answer, draft, isLoc
               disabled={!draft.trim() || isLocking}
             >
               {isLocking
-                ? <><span className="lock-anim">🔒</span> Mühürleniyor…</>
-                : "Yaz & Mühürle"
+                ? <><span className="lock-anim">🔒</span> Kilitleniyor…</>
+                : "Yaz & Kilitle"
               }
             </button>
           </>
