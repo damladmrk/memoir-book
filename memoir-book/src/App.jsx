@@ -507,8 +507,8 @@ export default function App() {
           <div className="intro-inner">
             <p className="intro-ornament">— Hatıra —</p>
             <img src="/memoir-book/photo.jpeg" alt="" style={{
-              width: 200,
-              height: 200,
+              width: 300,
+              height: 300,
               objectFit: "cover",
               marginBottom: 24,
               filter: "sepia(0.2)",
