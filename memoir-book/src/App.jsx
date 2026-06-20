@@ -1,5 +1,31 @@
 import { useState, useEffect } from "react";
 
+const SUPABASE_URL = "https://iueheqcpibdkmqwfovrf.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1ZWhlcWNwaWJka21xd2ZvdnJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MjM5NTksImV4cCI6MjA5NzQ5OTk1OX0.P3IvpKHpKVrGW0-hv-m0D0qsTDFY96nSxlq5n4KCPos";
+
+async function dbGetAnswers() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/answers?select=*`, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+    },
+  });
+  return res.json();
+}
+
+async function dbSaveAnswer(question_idx, answer_text) {
+  await fetch(`${SUPABASE_URL}/rest/v1/answers`, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({ question_idx, answer_text, locked_at: new Date().toISOString() }),
+  });
+}
+
 const WEEKLY_QUESTIONS = [
   "Çocukluğundan kalan en eski anın ne?",
   "Hayatında örnek aldığın biri var mı? Varsa kim ve neden?",
@@ -47,11 +73,7 @@ function getWeekNumber() {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 1);
   const weekOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24 * 7));
-  return Math.max(0, weekOfYear - 23); // 25. haftadan başla (0-indexed)
-}
-
-function getCurrentQuestionIndex() {
-  return getWeekNumber() % WEEKLY_QUESTIONS.length;
+  return Math.max(0, weekOfYear - 24);
 }
 
 function formatDate(isoString) {
@@ -66,46 +88,62 @@ export default function App() {
   const [drafts, setDrafts] = useState({});
   const [loading, setLoading] = useState(true);
   const [lockingIdx, setLockingIdx] = useState(null);
-  const currentIdx = getCurrentQuestionIndex();
+  const currentWeek = getWeekNumber();
+  const visibleCount = Math.min(currentWeek + 1, WEEKLY_QUESTIONS.length);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("memoir_answers");
-      if (raw) setAnswers(JSON.parse(raw));
-    } catch (e) {}
-    setLoading(false);
+    loadAnswers();
   }, []);
 
+  async function loadAnswers() {
+    try {
+      const rows = await dbGetAnswers();
+      const map = {};
+      rows.forEach(r => {
+        map[r.question_idx] = { text: r.answer_text, lockedAt: r.locked_at };
+      });
+      setAnswers(map);
+    } catch (e) {}
+    setLoading(false);
+  }
+
   async function saveAnswer(idx) {
-  const text = drafts[idx];
-  if (!text || !text.trim()) return;
-  setLockingIdx(idx);
-  await new Promise(r => setTimeout(r, 900));
+    const text = drafts[idx];
+    if (!text || !text.trim()) return;
+    setLockingIdx(idx);
+    await new Promise(r => setTimeout(r, 900));
 
-  window.emailjs.send(
-    "service_2i0zled",
-    "template_d49mgy8",
-    {
-      week_num: idx + 1,
-      question: WEEKLY_QUESTIONS[idx],
-      answer: text.trim(),
-      date: new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })
-    },
-    "dxBY-FMG_OyKBuUdn"
-  );
+    try {
+      await window.emailjs.send(
+        "service_2i0zled",
+        "template_d49mgy8",
+        {
+          week_num: idx + 1,
+          question: WEEKLY_QUESTIONS[idx],
+          answer: text.trim(),
+          date: new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })
+        },
+        "dxBY-FMG_OyKBuUdn"
+      );
+    } catch (e) {
+      console.error("Mail gönderilemedi:", e);
+    }
 
-  const newAnswers = {
-    ...answers,
-    [idx]: { text: text.trim(), lockedAt: new Date().toISOString() }
-  };
-  setAnswers(newAnswers);
-  localStorage.setItem("memoir_answers", JSON.stringify(newAnswers));
-  setLockingIdx(null);
-}
+    try {
+      await dbSaveAnswer(idx, text.trim());
+    } catch (e) {
+      console.error("Supabase kaydedilemedi:", e);
+    }
+
+    const newAnswers = {
+      ...answers,
+      [idx]: { text: text.trim(), lockedAt: new Date().toISOString() }
+    };
+    setAnswers(newAnswers);
+    setLockingIdx(null);
+  }
 
   const answeredCount = Object.keys(answers).length;
-  // Only show weeks up to and including current
-  const visibleWeeks = Array.from({ length: currentIdx + 1 }, (_, i) => i).reverse();
 
   if (loading) return (
     <div style={{ background: "#F7F3EC", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -122,7 +160,6 @@ export default function App() {
         html { scroll-behavior: smooth; }
         body { background: #EDE8DF; }
 
-        /* ── INTRO ── */
         .intro {
           min-height: 100vh;
           background: #F7F3EC;
@@ -139,13 +176,9 @@ export default function App() {
           content: '';
           position: absolute;
           inset: 0;
-          background-image:
-            repeating-linear-gradient(
-              transparent,
-              transparent 31px,
-              #D6CDBF 31px,
-              #D6CDBF 32px
-            );
+          background-image: repeating-linear-gradient(
+            transparent, transparent 31px, #D6CDBF 31px, #D6CDBF 32px
+          );
           opacity: 0.45;
           pointer-events: none;
         }
@@ -170,12 +203,7 @@ export default function App() {
           opacity: 0.8;
         }
 
-        .intro-book {
-          font-size: 64px;
-          margin-bottom: 24px;
-          display: block;
-          filter: sepia(0.3);
-        }
+        .intro-book { font-size: 64px; margin-bottom: 24px; display: block; filter: sepia(0.3); }
 
         .intro-title {
           font-family: 'Playfair Display', serif;
@@ -187,18 +215,9 @@ export default function App() {
           margin-bottom: 8px;
         }
 
-        .intro-title em {
-          font-style: italic;
-          color: #8B3A2A;
-        }
+        .intro-title em { font-style: italic; color: #8B3A2A; }
 
-        .intro-rule {
-          width: 60px;
-          height: 1px;
-          background: #8B3A2A;
-          margin: 24px auto;
-          opacity: 0.5;
-        }
+        .intro-rule { width: 60px; height: 1px; background: #8B3A2A; margin: 24px auto; opacity: 0.5; }
 
         .intro-subtitle {
           font-family: 'Lora', serif;
@@ -225,10 +244,7 @@ export default function App() {
           transition: background 0.2s, transform 0.15s;
         }
 
-        .intro-btn:hover {
-          background: #8B3A2A;
-          transform: translateY(-1px);
-        }
+        .intro-btn:hover { background: #8B3A2A; transform: translateY(-1px); }
 
         .intro-week-hint {
           margin-top: 28px;
@@ -238,12 +254,7 @@ export default function App() {
           font-style: italic;
         }
 
-        /* ── BOOK SCREEN ── */
-        .book {
-          min-height: 100vh;
-          background: #EDE8DF;
-          padding-bottom: 80px;
-        }
+        .book { min-height: 100vh; background: #EDE8DF; padding-bottom: 80px; }
 
         .book-header {
           background: #2C2416;
@@ -291,9 +302,7 @@ export default function App() {
           font-style: italic;
         }
 
-        .book-progress {
-          padding: 20px 24px 0;
-        }
+        .book-progress { padding: 20px 24px 0; }
 
         .progress-meta {
           font-family: 'Lora', serif;
@@ -305,10 +314,7 @@ export default function App() {
           margin-bottom: 8px;
         }
 
-        .progress-track {
-          height: 2px;
-          background: #D6CDBF;
-        }
+        .progress-track { height: 2px; background: #D6CDBF; }
 
         .progress-fill {
           height: 100%;
@@ -323,11 +329,7 @@ export default function App() {
           padding: 28px 24px 12px;
         }
 
-        .section-divider-line {
-          flex: 1;
-          height: 1px;
-          background: #C4B89A;
-        }
+        .section-divider-line { flex: 1; height: 1px; background: #C4B89A; }
 
         .section-divider-text {
           font-family: 'Lora', serif;
@@ -344,7 +346,6 @@ export default function App() {
           gap: 20px;
         }
 
-        /* ── CARD ── */
         .card {
           background: #F7F3EC;
           border-radius: 1px;
@@ -356,26 +357,19 @@ export default function App() {
         .card::before {
           content: '';
           position: absolute;
-          top: 0; bottom: 0;
-          left: 0;
+          top: 0; bottom: 0; left: 0;
           width: 3px;
           background: #8B3A2A;
           opacity: 0.7;
         }
 
-        .card.past::before {
-          background: #C4B89A;
-          opacity: 0.5;
-        }
+        .card.past::before { background: #C4B89A; opacity: 0.5; }
 
         .card-lines {
           position: absolute;
           inset: 0;
           background-image: repeating-linear-gradient(
-            transparent,
-            transparent 31px,
-            #E0D8CC 31px,
-            #E0D8CC 32px
+            transparent, transparent 31px, #E0D8CC 31px, #E0D8CC 32px
           );
           pointer-events: none;
           opacity: 0.6;
@@ -402,9 +396,7 @@ export default function App() {
           text-transform: uppercase;
         }
 
-        .card.past .card-week-num {
-          color: #A0917A;
-        }
+        .card.past .card-week-num { color: #A0917A; }
 
         .locked-tag {
           display: flex;
@@ -436,7 +428,6 @@ export default function App() {
         .card-answer-text {
           font-family: 'Lora', serif;
           font-size: 15px;
-          font-weight: 400;
           color: #4A3C2A;
           line-height: 1.85;
           white-space: pre-wrap;
@@ -468,10 +459,7 @@ export default function App() {
           outline: none;
         }
 
-        .card-textarea::placeholder {
-          color: #C4B89A;
-          font-style: italic;
-        }
+        .card-textarea::placeholder { color: #C4B89A; font-style: italic; }
 
         .send-btn {
           margin-top: 16px;
@@ -531,7 +519,7 @@ export default function App() {
               Sorular için...
             </button>
             <p className="intro-week-hint">
-              {(currentIdx)}. hafta sorusu seni bekliyor
+              {visibleCount}. hafta sorusu seni bekliyor
             </p>
           </div>
         </div>
@@ -541,7 +529,7 @@ export default function App() {
             <button className="back-btn" onClick={() => setScreen("intro")}>←</button>
             <div className="book-header-text">
               <div className="book-header-title">Anılar Kitabı</div>
-              <div className="book-header-sub">Her hafta yeni bi soru</div>
+              <div className="book-header-sub">Her hafta yeni bir soru</div>
             </div>
           </div>
 
@@ -555,7 +543,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Current week */}
           <div className="section-divider">
             <div className="section-divider-line" />
             <span className="section-divider-text">bu hafta</span>
@@ -564,20 +551,19 @@ export default function App() {
 
           <div className="cards">
             <QuestionCard
-              idx={currentIdx}
-              question={WEEKLY_QUESTIONS[currentIdx]}
+              idx={currentWeek}
+              question={WEEKLY_QUESTIONS[currentWeek]}
               isCurrent={true}
-              isLocked={!!answers[currentIdx]}
-              answer={answers[currentIdx]}
-              draft={drafts[currentIdx] || ""}
-              isLocking={lockingIdx === currentIdx}
-              onDraftChange={(val) => setDrafts(d => ({ ...d, [currentIdx]: val }))}
-              onSave={() => saveAnswer(currentIdx)}
+              isLocked={!!answers[currentWeek]}
+              answer={answers[currentWeek]}
+              draft={drafts[currentWeek] || ""}
+              isLocking={lockingIdx === currentWeek}
+              onDraftChange={(val) => setDrafts(d => ({ ...d, [currentWeek]: val }))}
+              onSave={() => saveAnswer(currentWeek)}
             />
           </div>
 
-          {/* Past weeks */}
-          {currentIdx > 0 && (
+          {visibleCount > 1 && (
             <>
               <div className="section-divider">
                 <div className="section-divider-line" />
@@ -585,7 +571,7 @@ export default function App() {
                 <div className="section-divider-line" />
               </div>
               <div className="cards">
-                {visibleWeeks.slice(1).map((idx) => (
+                {Array.from({ length: visibleCount - 1 }, (_, i) => visibleCount - 2 - i).map((idx) => (
                   <QuestionCard
                     key={idx}
                     idx={idx}
@@ -616,7 +602,7 @@ function QuestionCard({ idx, question, isCurrent, isLocked, answer, draft, isLoc
       <div className="card-lines" />
       <div className="card-inner">
         <div className="card-meta">
-          <span className="card-week-num">{(idx)}. Hafta</span>
+          <span className="card-week-num">{idx + 1}. Hafta</span>
           {isLocked
             ? <span className="locked-tag"><span className={isLocking ? "lock-anim" : ""}>🔒</span> kilitlendi</span>
             : isCurrent
