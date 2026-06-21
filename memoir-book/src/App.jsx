@@ -522,7 +522,7 @@ export default function App() {
               Sorular için...
             </button>
             <p className="intro-week-hint">
-              {visibleCount}. hafta sorusu seni bekliyor
+              {visibleCount}. haftanın sorusu için...
             </p>
           </div>
         </div>
